@@ -11,28 +11,32 @@ class Salespart:
     def app(self, file):
         
         # Create menu list with key['Sales Part No', 'Sales Parts Description']
-        parts_list = self.create_parts_list(file)
+        parts_list = self.__create_parts_list(file)
 
         # Call the menu and get sellected items
         selected_parts = self.menu.checkbox_menu(parts_list)
 
         # Return selected items as list
-        selected_parts_list = self.create_list_from_selected(selected_parts)
+        selected_parts_list = self.__create_list_from_selected(selected_parts)
 
         # Create data row list
         columns = toolbox.get_data_rows(file)
         selected_colums = self.menu.checkbox_menu(columns)
-        selcted_columns_list = self.create_list_from_selected(selected_colums)
+        selcted_columns_list = self.__create_list_from_selected(selected_colums)
 
         # Created data structure with sellected items
-        data = self.create_data_st(file, selected_parts_list,
-                                   selcted_columns_list)
+        data = self.__create_data_st(file, selected_parts_list,
+                                     selcted_columns_list)
 
-        # Prepare data and plot data
+        # Prepare data
         for sub_data in data:
-            self.data_handler(sub_data, selcted_columns_list)
+           st_data =  self.__data_sort_by_year_month(sub_data, selcted_columns_list)
+           for y in st_data:
+               for m in st_data[y]:
+                    print(y, m)
+        print(st_data['2019']['08'])
 
-    def create_parts_list(self, file):
+    def __create_parts_list(self, file):
         key = 'Sales Part No'
         des = 'Sales Part Description'
         part = []
@@ -50,7 +54,7 @@ class Salespart:
         selection = toolbox.concat_array_str(part, description)
         return selection
     
-    def create_list_from_selected(self, selections):
+    def __create_list_from_selected(self, selections):
         selected_list = []
         for i in selections:
             for k in selections[i]:
@@ -58,7 +62,7 @@ class Salespart:
                 selected_list.append(tmp)
         return selected_list
 
-    def create_data_st(self, file, selected_parts, selected_colums):
+    def __create_data_st(self, file, selected_parts, selected_colums):
         data_st = []
         key = 'Sales Part No'
         for item in selected_parts:
@@ -76,14 +80,50 @@ class Salespart:
             data_st.append(a)
         return data_st
   
-    def data_handler(self, data, selected_column_list):
+    def __data_sort_by_year_month(self, data, selected_column_list):
+        column_list = selected_column_list
+        confirmed_date = 'Confirmed Date'
+        created_date = 'Created'
+        promised_date = 'Promised Delivery Date/Time'
+        last_ship_date = 'Last Actual Ship Date'
+        if created_date in column_list:
+            date_index = column_list.index(created_date)
+        elif confirmed_date in column_list:
+            date_index = column_list.index(confirmed_date)
+        elif promised_date in column_list:
+            date_index = column_list.index(promised_date)
+        elif last_ship_date in column_list:
+            date_index = column_list.index(last_ship_date)
+        else:
+            print('Date column is not found in the data EXIT')
+            exit(0)
+        data_st = dict()
         for name in data:
-            a = self.data_sort_by_year(data[name], selected_column_list)
-
-    def data_sort_by_year(self, data, selected_column_list):
+            data_year = self.__data_sort_by_year(data[name], date_index)
+            data_st = data_year
+            for year in data_year:
+                data_month = self.__data_sort_by_month(data_year[year], date_index, year)
+                data_st[year] = data_month
+        return data_st
+    
+    def __data_sort_by_year(self, data, date_index):
+        y = dict()
         for sub_data in data:
-            for item in sub_data:
-                print(toolbox.is_a_date(item))
-                if toolbox.is_a_date(item):
-                    year = toolbox.get_year(item)
-                    print(year, sub_data)
+            year = toolbox.get_year(sub_data[date_index])
+            if year in y:
+                y[year].append(sub_data)
+            else:
+                y[year] = []
+                y[year].append(sub_data)
+        return y
+    
+    def __data_sort_by_month(self, data, date_index, year):
+        m = dict()
+        for sub_data in data:
+            month = toolbox.get_month(sub_data[date_index])
+            if month in m:
+                m[month].append(sub_data)
+            else:
+                m[month] = []
+                m[month].append(sub_data)
+        return m

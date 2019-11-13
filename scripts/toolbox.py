@@ -30,13 +30,40 @@ def get_data_rows(file):
     f.close()
     return col
 
-def is_a_date(date_string):
+def is_date(date_string):
+    if(is_date_and_time(date_string)):
+        return True
+    else:
+        try:
+            datetime.datetime.strptime(date_string, '%m/%d/%Y')
+            return True
+        except ValueError:
+            return False
+
+
+def get_year(date_string):
+    if(is_date_and_time(date_string)):
+        date_obj = datetime.datetime.strptime(date_string, '%m/%d/%Y %H:%M')
+        year = date_obj.strftime('%Y')
+        return str(year)
+    else:
+        date_obj = datetime.datetime.strptime(date_string, '%m/%d/%Y')
+        year = date_obj.strftime('%Y')
+        return str(year)
+
+def get_month(date_string):
+    if(is_date_and_time(date_string)):
+        date_obj = datetime.datetime.strptime(date_string, '%m/%d/%Y %H:%M')
+        month= date_obj.strftime('%m')
+        return str(month)
+    else:
+        date_obj = datetime.datetime.strptime(date_string, '%m/%d/%Y')
+        month = date_obj.strftime('%m')
+        return str(month)
+
+def is_date_and_time(date_string):
     try:
-        datetime.datetime.strptime(date_string, '%m/%d/%Y')
+        datetime.datetime.strptime(date_string, '%m/%d/%Y   %H:%M')
         return True
     except ValueError:
         return False
-def get_year(date_string):
-    date_obj = datetime.datetime.strptime(date_string, '%m/%d/%Y')
-    year = date_obj.strftime('%Y')
-    return str(year)
