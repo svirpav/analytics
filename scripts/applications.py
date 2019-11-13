@@ -17,24 +17,26 @@ class Salespart:
         selected_parts = self.menu.checkbox_menu(parts_list)
 
         # Return selected items as list
-        selected_parts_list = self.__create_list_from_selected(selected_parts)
+        selected_parts_list = self.__create_list(selected_parts)
 
         # Create data row list
         columns = toolbox.get_data_rows(file)
         selected_colums = self.menu.checkbox_menu(columns)
-        selcted_columns_list = self.__create_list_from_selected(selected_colums)
+        selcted_columns_list = self.__create_list(selected_colums)
 
         # Created data structure with sellected items
-        data = self.__create_data_st(file, selected_parts_list,
-                                     selcted_columns_list)
-
+        data_list = self.__create_data_st(file, selected_parts_list,
+                                          selcted_columns_list)
+   
         # Prepare data
-        for sub_data in data:
-           st_data =  self.__data_sort_by_year_month(sub_data, selcted_columns_list)
-           for y in st_data:
-               for m in st_data[y]:
-                    print(y, m)
-        print(st_data['2019']['08'])
+        final_data = dict()
+        for item in data_list:
+           sorted_data_dict =  self.__data_sort_by_date(item, selcted_columns_list)
+           for name in item:
+               final_data[name] = sorted_data_dict
+
+        print(final_data)
+                   
 
     def __create_parts_list(self, file):
         key = 'Sales Part No'
@@ -54,7 +56,7 @@ class Salespart:
         selection = toolbox.concat_array_str(part, description)
         return selection
     
-    def __create_list_from_selected(self, selections):
+    def __create_list(self, selections):
         selected_list = []
         for i in selections:
             for k in selections[i]:
@@ -80,7 +82,7 @@ class Salespart:
             data_st.append(a)
         return data_st
   
-    def __data_sort_by_year_month(self, data, selected_column_list):
+    def __data_sort_by_date(self, data, selected_column_list):
         column_list = selected_column_list
         confirmed_date = 'Confirmed Date'
         created_date = 'Created'
@@ -97,33 +99,25 @@ class Salespart:
         else:
             print('Date column is not found in the data EXIT')
             exit(0)
-        data_st = dict()
-        for name in data:
-            data_year = self.__data_sort_by_year(data[name], date_index)
-            data_st = data_year
-            for year in data_year:
-                data_month = self.__data_sort_by_month(data_year[year], date_index, year)
-                data_st[year] = data_month
-        return data_st
+        for item in data:
+            sorted_data = self.__sort_data(data[item], date_index)
+        return sorted_data
     
-    def __data_sort_by_year(self, data, date_index):
+
+    def __sort_data(slef, data, date_index):
         y = dict()
-        for sub_data in data:
-            year = toolbox.get_year(sub_data[date_index])
+        for i in data:
+            year = toolbox.get_year(i[date_index])
+            month = toolbox.get_month(i[date_index])
+            formated_data = toolbox.format_data_array(i)
             if year in y:
-                y[year].append(sub_data)
+                if month in y[year]:
+                    y[year][month].append(formated_data)
+                else:
+                    y[year][month] = []
+                    y[year][month].append(formated_data)
             else:
-                y[year] = []
-                y[year].append(sub_data)
+                y[year] = {}
+                y[year][month] = []
+                y[year][month].append(formated_data)
         return y
-    
-    def __data_sort_by_month(self, data, date_index, year):
-        m = dict()
-        for sub_data in data:
-            month = toolbox.get_month(sub_data[date_index])
-            if month in m:
-                m[month].append(sub_data)
-            else:
-                m[month] = []
-                m[month].append(sub_data)
-        return m

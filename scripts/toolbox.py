@@ -1,6 +1,39 @@
 import sys
 import csv
 import datetime
+from datetime import date
+
+
+def version_check():
+    return sys.version()
+
+
+def is_date(date_string):
+    if(is_date_and_time(date_string)):
+        return True
+    else:
+        try:
+            datetime.datetime.strptime(date_string, '%m/%d/%Y')
+            return True
+        except ValueError:
+            return False
+
+
+def is_date_and_time(date_string):
+    try:
+        datetime.datetime.strptime(date_string, '%m/%d/%Y   %H:%M')
+        return True
+    except ValueError:
+        return False
+
+
+def is_number(value):
+    try:
+        float(value)
+        return True
+    except ValueError as ve:
+        return False
+
 
 def get_part_string(string, sep):
     spl = string.split(sep)
@@ -17,8 +50,6 @@ def concat_array_str(array_1, array_2):
             array.append(tmp)
     return array
 
-def version_check():
-    return sys.version()
 
 def get_data_rows(file):
     col = []
@@ -29,16 +60,6 @@ def get_data_rows(file):
             break
     f.close()
     return col
-
-def is_date(date_string):
-    if(is_date_and_time(date_string)):
-        return True
-    else:
-        try:
-            datetime.datetime.strptime(date_string, '%m/%d/%Y')
-            return True
-        except ValueError:
-            return False
 
 
 def get_year(date_string):
@@ -51,19 +72,39 @@ def get_year(date_string):
         year = date_obj.strftime('%Y')
         return str(year)
 
+
 def get_month(date_string):
     if(is_date_and_time(date_string)):
         date_obj = datetime.datetime.strptime(date_string, '%m/%d/%Y %H:%M')
-        month= date_obj.strftime('%m')
+        month = date_obj.strftime('%m')
         return str(month)
     else:
         date_obj = datetime.datetime.strptime(date_string, '%m/%d/%Y')
         month = date_obj.strftime('%m')
         return str(month)
 
-def is_date_and_time(date_string):
+
+def format_data_array(data):
+    tmp = data
+    for i, k in enumerate(data):
+        if(is_number(k)):
+            tmp[i] = str_to_num(k)
+        elif(is_date(k)):
+            tmp[i] = str_to_date(k)
+    return tmp
+
+
+def str_to_num(value):
+    a = value
     try:
-        datetime.datetime.strptime(date_string, '%m/%d/%Y   %H:%M')
-        return True
-    except ValueError:
-        return False
+        return float(a)
+    except ValueError as i:
+        return value
+
+
+def str_to_date(value):
+    if(is_date_and_time(value)):
+        date_obj = datetime.datetime.strptime(value, '%m/%d/%Y %H:%M')
+    else:
+        date_obj = datetime.datetime.strptime(value, '%m/%d/%Y')
+    return date_obj.date()
