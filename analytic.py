@@ -20,9 +20,11 @@ def salespart(file):
     applications.Salespart().app(file)
 
 @main.command()
-def customer():
+#   @click.option('--p', help='Command option')
+@click.argument('file')
+def analytics(file):
     """This command is to run alasys based on customer."""
-    pass
+    applications.Analytics().app(file)
 
 if __name__ == "__main__":
     main()

@@ -108,3 +108,27 @@ def str_to_date(value):
     else:
         date_obj = datetime.datetime.strptime(value, '%m/%d/%Y')
     return date_obj.date()
+
+def sort(x, y):
+    a = x
+    b = y
+    for i, k in enumerate(a):
+        index = __find_smalest(a, i)
+        a, b = __swap(a, b, i, index)
+    return a, b
+
+def __find_smalest(x, startIndex):
+    minIndex = startIndex
+    minValue = x[startIndex]
+    for i in range(startIndex, len(x)):
+        if(x[i] < minValue):
+            minIndex = i
+            minValue = x[i]
+    return minIndex
+
+def __swap(x, y, index_1, index_2):
+    a = x
+    b = y
+    a[index_1], a[index_2] = a[index_2], a[index_1]
+    b[index_1], b[index_2] = b[index_2], b[index_1]
+    return a, b
