@@ -180,7 +180,11 @@ class Analytics:
     def app(self, file):
         # Create available column list
         column_list = self.csvh.get_column_list(file)
-        index_dict = self.__index_dict(column_list)    
+
+        # Create all available columns index dictionary
+        index_dict = self.__index_dict(column_list)
+
+        # Open data file read and creade data list
         data_list = self.csvh.get_data_list(file)
 
     def __index_dict(self, data):
