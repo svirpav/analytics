@@ -19,4 +19,5 @@ class CSVReader:
             for row in data:
                 data_list.append(row)
         f.close()
+        data_list.pop(0)
         return data_list
