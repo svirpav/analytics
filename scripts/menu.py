@@ -1,6 +1,7 @@
 from __future__ import print_function, unicode_literals
 from PyInquirer import style_from_dict, Token, prompt, Separator
 
+
 class Menu:
 
     def __init__(self):

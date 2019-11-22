@@ -1,33 +1,69 @@
 import matplotlib.pyplot as plt
+import math
+import os
+import statistics
+from pathlib import Path as path
 from scripts import toolbox
 
 
-class Partplot:
+class Plot:
 
-    # Create data vectors for ploting
-    def plot_data(self, data_st, selected_columns_list, parts):
-        for name in data_st:
-            if name in parts:
-                for year in data_st[name]:
-                    plot_data = dict()
-                    for month in data_st[name][year]:
-                        sales_qty_sum = self.__sum_qty(data_st[name][year][month], selected_columns_list)
-                        plot_data[int(month)] = sales_qty_sum
-                    x = list(plot_data.keys())
-                    y = list(plot_data.values())
-                    print(x, y)
-                    x, y = toolbox.sort(x, y)
-                    print(x, y)
-                    plt.scatter(x, y, label=year)
-                    plt.legend()
-                plt.show()
+    def __init__(self):
+        home = str(path.home())
+        directorie = 'plots'
+        self.path = os.path.join(home, directorie)
+        try:
+            os.mkdir(self.path)
+        except FileExistsError as fex:
+            print(fex)
 
+    # Plot by the year
+    def plot_by_year(self, data, selected_years):
+        name = 'Spareparts Qty sales peaks'
+        file = 'qty_peaks.jpeg'
+        dt = dict()
+        cols = 3
+        rows = math.ceil(len(selected_years) / cols)
+        fig, axs = plt.subplots(rows, cols, figsize=(18, 12))
+        fig.suptitle(name)
+        axs = self.__axes_trim(axs, len(selected_years))
+        for ax, case in zip(axs, selected_years):
+            ax.set_title(str(case))
+            x = list(data[case].keys())
+            y = list(data[case].values())
+            sorted_x, sorted_y = toolbox.merge_sort(x, y, 0, len(y)-1)
+            sorted_x.reverse()
+            sorted_y.reverse()
+            y_mean = statistics.mean(sorted_y)
+            x_mean = toolbox.find_closest(sorted_y, int(y_mean))
+            ax.grid(linestyle='-')
+            ax.plot(sorted_y)
+            ax.plot(y_mean, x_mean, marker='x', color='r')
+            ax.set(ylabel='Sales Qty', xlabel='Amount of parts sold')
+            # self.__simple_analys(x, y, case)
+            dt[case] = sorted_x[:x_mean]
+        self.__save_plot(fig, file)
+        return dt
 
+    def plot_gross_sales(self, data):
+        # file = 'gross_sales.jpg'
+        name = 'Gross Sales'
+        fig, ax = plt.subplots()
+        fig.suptitle(name)
+        x = list(data.keys())
+        for year in data:
+            y = list(data[year].values())
+            ax.plot(x, y)
+        plt.show()
 
-    def __sum_qty(self, data, selected_columns_list):
-        key = 'Sales Qty'
-        i = selected_columns_list.index(key)
-        value = 0
-        for k in data:
-            value += k[i]
-        return value
+    def __axes_trim(self, axs, N):
+        axs = axs.flat
+        for ax in axs[N:]:
+            ax.remove()
+        return axs[:N]
+
+    def __save_plot(self, figure, name):
+        file = os.path.join(self.path, name)
+        figure.savefig(file, dpi=300)
+        # plt.show(figure)
+        plt.close(figure)
