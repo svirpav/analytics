@@ -60,6 +60,17 @@ def str_to_date(value):
     return date_obj.date()
 
 
+def date_to_year_month_lst(data):
+    list_year = []
+    list_month = []
+    for i in data:
+        year = get_year(i)
+        month = get_month(i)
+        list_year.append(year)
+        list_month.append(month)
+    return list_year, list_month
+
+
 ''' Numeric Helpers.'''
 
 
