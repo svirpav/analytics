@@ -92,6 +92,23 @@ def str_to_num(value):
         return value
 
 
+def value_to_int(data):
+    col = []
+    for i in data:
+        try:
+            x = float(i)
+            x = int(x)
+            col.append(x)
+        except ValueError:
+            var = i.split(',')
+            tmp = int(var[0])
+            tmp = tmp * 1000
+            x = tmp + float(var[1])
+            x = int(x)
+            col.append(x)
+    return col
+
+
 '''String Helprs.'''
 
 

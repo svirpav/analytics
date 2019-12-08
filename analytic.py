@@ -21,15 +21,7 @@ def analytics(file):
 @main.command()
 #   @click.option('--p', help='Command option')
 @click.argument('file')
-def application(file):
-    """This command is to run alasys based on customer."""
-    applications.Application().app(file)
-
-
-@main.command()
-#   @click.option('--p', help='Command option')
-@click.argument('file')
-def supplier(file):
+def suppliers(file):
     """This command is to run alasys based on customer."""
     applications.Supplier().app(file)
 
