@@ -1,7 +1,6 @@
 from scripts import toolbox
 from scripts import menu
 from scripts import dataplot
-# from scripts import csvhandler
 import pandas as pd
 
 
@@ -15,123 +14,67 @@ class Analytics:
         # Read CSV and create Pandas data frame
         data = pd.read_csv(file, encoding='unicode-escape')
 
-        # Create Year and Month column
-        dates = data['Act. Del. Date']
-        year, month = self.__return_month_year(dates)
-        data['Year'] = pd.Series(year)
-        data['Month'] = pd.Series(month)
+        # Create data selection
+        selections = ['Order No',
+                      'Order Type',
+                      'Supply Code',
+                      'Sales Part Type',
+                      'Sales Part No',
+                      'Sales Qty',
+                      'Customer No',
+                      'Site',
+                      'Supplier',
+                      'Cust Stat Grp',
+                      'Created',
+                      'Confirmed Date',
+                      'Eur Value',
+                      'Total Cost Eur',
+                      'SalesGroup',
+                      'Price/Curr',
+                      'Gross Amt/Curr',
+                      'Currency',
+                      'Cost',
+                      'Total Cost/Base',
+                      'Promised Delivery Date/Time',
+                      'Planned Delivery Date/Time',
+                      'Planned Due Date',
+                      'First Actual Ship Date',
+                      'Last Actual Ship Date',
+                      'Region Code',
+                      'Order Ref 1',
+                      'Project ID',
+                      'Project Name',
+                      'Cost Cent',
+                      'BusinessLi',
+                      'Counterpar',
+                      'Customs Stat No']
 
-        # Group By Year
-        grp_year_bl = data.groupby(['Year', 'Business Line'])
-        year_bl_dict = self.__prepare_data(grp_year_bl)
-        bl_units = self.__find_bl_units(data['Business Line'])
-        self.plot.plot_gross_sales_bl(year_bl_dict, bl_units)
+        # Create new data frame
+        selected_data = pd.DataFrame()
+        for selection in selections:
+            col = []
+            col = data[selection]
+            selected_data[selection] = pd.Series(col)
 
-    def __return_month_year(self, dates):
-        list_year = []
-        list_month = []
-        for k, i in enumerate(dates):
-            i = self.__return_latest_date(i, ' ')
-            year = toolbox.get_year(i)
-            month = toolbox.get_month(i)
-            list_year.append(year)
-            list_month.append(month)
-        return list_year, list_month
-
-    def __return_latest_date(self, string, sep):
-        spl = string.split(sep)
-        if toolbox.is_date(spl[-1]):
-            return spl[-1]
-        else:
-            return spl[0]
-
-    def __prepare_data(self, data):
-        data_dict = dict()
-        for name, group in data:
-            if name[0] not in data_dict:
-                data_dict[name[0]] = {}
-                data_dict[name[0]][name[1]] = group['Sales EUR'].sum()
-            else:
-                data_dict[name[0]][name[1]] = group['Sales EUR'].sum()
-        return data_dict
-
-    def __find_bl_units(self, data):
-        bl_units = dict()
-        for unit in data:
-            if unit not in bl_units:
-                bl_units[unit] = []
-        return bl_units
-
-
-'''Using Pandas.'''
-
-
-class Application:
-
-    def __init__(self):
-        self.menu = menu.Menu()
-        self.plot = dataplot.Plot()
-
-    def app(self, file):
-        # Read CSV file
-        inital_data = pd.read_csv(file, encoding='unicode-escape')
-        data_copy = inital_data
+        # Remove all internal orders
+        indexIntern = selected_data[(selected_data['Order Type'] == 'INT') |
+                                    (selected_data['Order Type'] == 'WAR')
+                                    ].index
+        selected_data.drop(indexIntern, inplace=True)
+        selected_data.reset_index(drop=True, inplace=True)
 
         # Create Month and Yea column
-        year, month = self.__create_year_month_col(data_copy)
-        data_copy['Year'] = pd.Series(year)
-        data_copy['Month'] = pd.Series(month)
+        date = selected_data['Created']
+        year, month = toolbox.date_to_year_month_lst(date)
+        selected_data['Year'] = pd.Series(year)
+        selected_data['Month'] = pd.Series(month)
 
-        self.__remove_internal_lines(data_copy)
-
-        part_year_group = data_copy.groupby(['Sales Part No', 'Year'])
-        '''
-        x = dict()
-        for name, group in part_year_group:
-            if name[1] in x:
-                if name[0] in x[name[1]]:
-                    x[name[1]][name[0]] += group['Sales Qty'].sum()
-                else:
-                    x[name[1]][name[0]] = group['Sales Qty'].sum()
-            else:
-                x[name[1]] = {}
-                x[name[1]][name[0]] = group['Sales Qty'].sum()
-        years = []
-        for year in x:
-            years.append(year)
-        years.sort() '''
-        # self.plot.plot_by_year(x, years)
-        print('Group by Yaer')
-        y = dict()
-        for name, group in part_year_group:
-            if name[1] in y:
-                y[name[1]][name[0]] = [group['Sales Qty'].sum(),
-                                       group['Gross Amt/Base'].sum()]
-            else:
-                y[name[1]] = {}
-                y[name[1]][name[0]] = [group['Sales Qty'].sum(),
-                                       group['Gross Amt/Base'].sum()]
-        years = []
-        for year in y:
-            years.append(year)
-        years = years.sort()
-        self.plot.plot_qty_vs_gross(y, years)
-
-    def __create_year_month_col(self, data):
-        a = data['Created']
-        list_year = []
-        list_month = []
-        for i in a:
-            year = toolbox.get_year(i)
-            month = toolbox.get_month(i)
-            list_year.append(year)
-            list_month.append(month)
-        return list_year, list_month
-
-    def __remove_internal_lines(self, data):
-        for row_index, row in data.iterrows():
-            if '*' in row['Order No']:
-                data.drop(row_index)
+        # Refacto Total Cost Eur and Eur Value to INT
+        selected_data['Total Cost Eur'] =\
+            toolbox.value_to_int(selected_data['Total Cost Eur'])
+        selected_data['Eur Value'] =\
+            toolbox.value_to_int(selected_data['Eur Value'])
+        print(selected_data['Eur Value'])
 
 
 '''Supplier Analytics.'''
@@ -181,7 +124,7 @@ class Supplier:
         # Create data Year Site, supplier -> gross cost
         year_site_sup_cost = self.__df_year_site(grp_year_site_sup,
                                                  'Total Cost Eur')
-        # print(year_site_sup_cost)
+        print(year_site_sup_cost)
 
     def __refactor_supplier(self, column):
         a = column
@@ -223,7 +166,7 @@ class Supplier:
                 x = float(i)
                 x = int(x)
                 col.append(x)
-            except ValueError as ve:
+            except ValueError:
                 var = i.split(',')
                 tmp = int(var[0])
                 tmp = tmp * 1000
@@ -231,4 +174,3 @@ class Supplier:
                 x = int(x)
                 col.append(x)
         return col
-
